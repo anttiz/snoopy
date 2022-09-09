@@ -1,16 +1,22 @@
 import { GameObjects } from 'phaser';
+import { GameScene2 } from './gameScene2';
 
-export class GameScene extends Phaser.Scene {
+export class GameScene1 extends Phaser.Scene {
   cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   obstacle!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   platforms!: Phaser.Physics.Arcade.StaticGroup;
   movingPlatform!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   stars!: Phaser.Physics.Arcade.Group;
+  sceneIndex = 1;
 
   constructor() {
     super({ active: false, visible: false });
-    Phaser.Scene.call(this, { key: 'GameScene' });
+    Phaser.Scene.call(this, { key: `GameScene${this.sceneIndex}`  });
+  }
+
+  init(data: any) {
+    console.log('init', data);
   }
 
   preload() {
@@ -21,6 +27,7 @@ export class GameScene extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 48
     });
+    // this.scene.add(`GameScene${this.sceneIndex + 1}`, GameScene2, false);
   }
 
   create() {
@@ -74,11 +81,7 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.stars, this.platforms);
     this.physics.add.collider(this.stars, this.movingPlatform);
 
-    this.physics.add.overlap(
-      this.player,
-      this.stars,
-      GameScene.collectStar,
-    );
+    this.physics.add.overlap(this.player, this.stars, GameScene1.collectStar);
   }
 
   update() {
@@ -103,10 +106,21 @@ export class GameScene extends Phaser.Scene {
     } else if (movingPlatform.x <= 300) {
       movingPlatform.setVelocityX(50);
     }
+
+    if (player.x >= 784) {
+      this.nextScene();
+    }
   }
 
-  static collectStar(player: Phaser.Types.Physics.Arcade.GameObjectWithBody, star: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
+  static collectStar(
+    player: Phaser.Types.Physics.Arcade.GameObjectWithBody,
+    star: Phaser.Types.Physics.Arcade.GameObjectWithBody
+  ) {
     const star2 = star as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
     star2.disableBody(true, true);
+  }
+
+  nextScene() {
+    this.scene.start(`GameScene${this.sceneIndex + 1}`);
   }
 }

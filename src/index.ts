@@ -1,4 +1,5 @@
-import { GameScene } from "./scenes/gameScene";
+import { GameScene1 } from "./scenes/gameScene1";
+import { GameScene2 } from "./scenes/gameScene2";
 import { MenuScene } from "./scenes/menuScene";
 
 export function startGame() {
@@ -19,7 +20,7 @@ export function startGame() {
     },
     parent: "game",
     backgroundColor: "#0f0f0f",
-    scene: [GameScene],
+    scene: [MenuScene, GameScene1, GameScene2],
   };
 
   return new Phaser.Game(config);
