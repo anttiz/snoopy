@@ -1,6 +1,6 @@
 {
   "devOptions": {
-    "hmr": false
+    "hmr": true
   },
   "plugins": [
     [

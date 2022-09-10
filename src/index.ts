@@ -1,5 +1,5 @@
-import { GameScene1 } from "./scenes/gameScene1";
-import { GameScene2 } from "./scenes/gameScene2";
+import { GameScene } from "./scenes/gameScene";
+import { GameSceneOrig } from "./scenes/gameSceneOrig";
 import { MenuScene } from "./scenes/menuScene";
 
 export function startGame() {
@@ -14,13 +14,13 @@ export function startGame() {
     physics: {
       default: "arcade",
       arcade: {
-        gravity: { y: 300 },
+        gravity: { y: 700 },
         debug: true,
       },
     },
     parent: "game",
     backgroundColor: "#0f0f0f",
-    scene: [MenuScene, GameScene1, GameScene2],
+    scene: [/* MenuScene, */ GameScene, GameSceneOrig],
   };
 
   return new Phaser.Game(config);

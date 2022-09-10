@@ -1,18 +1,18 @@
 import { GameObjects } from 'phaser';
-import { GameScene2 } from './gameScene2';
+import { GameScene } from './gameScene';
 
-export class GameScene1 extends Phaser.Scene {
+export class GameSceneOrig extends Phaser.Scene {
   cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   obstacle!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   platforms!: Phaser.Physics.Arcade.StaticGroup;
   movingPlatform!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   stars!: Phaser.Physics.Arcade.Group;
-  sceneIndex = 1;
+  sceneIndex = 10;
 
   constructor() {
     super({ active: false, visible: false });
-    Phaser.Scene.call(this, { key: `GameScene${this.sceneIndex}`  });
+    Phaser.Scene.call(this, { key: `GameSceneOrig`  });
   }
 
   init(data: any) {
@@ -27,7 +27,7 @@ export class GameScene1 extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 48
     });
-    // this.scene.add(`GameScene${this.sceneIndex + 1}`, GameScene2, false);
+    // this.scene.add(`GameScene${this.sceneIndex - 1}`, GameScene1, false);
   }
 
   create() {
@@ -81,7 +81,7 @@ export class GameScene1 extends Phaser.Scene {
     this.physics.add.collider(this.stars, this.platforms);
     this.physics.add.collider(this.stars, this.movingPlatform);
 
-    this.physics.add.overlap(this.player, this.stars, GameScene1.collectStar);
+    this.physics.add.overlap(this.player, this.stars, GameSceneOrig.collectStar);
   }
 
   update() {
@@ -121,6 +121,6 @@ export class GameScene1 extends Phaser.Scene {
   }
 
   nextScene() {
-    this.scene.start(`GameScene${this.sceneIndex + 1}`);
+    this.scene.start(`GameScene${this.sceneIndex - 1}`);
   }
 }

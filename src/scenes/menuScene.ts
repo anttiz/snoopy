@@ -1,16 +1,12 @@
-import { GameScene1 } from './gameScene1';
-
 export class MenuScene extends Phaser.Scene {
   StartGameEvent: string = 'StartGameEvent';
 
   constructor() {
     super({ active: false, visible: false });
     Phaser.Scene.call(this, { key: 'MenuScene' });
-    console.log('menu', this.game);
   }
 
   preload() {
-    // this.scene.add('GameScene', GameScene1, false);
   }
 
   create() {
@@ -20,7 +16,6 @@ export class MenuScene extends Phaser.Scene {
     this.events.on(this.StartGameEvent, this.startGameScene, this);
 
     this.input.keyboard.on('keydown', (event: KeyboardEvent) => {
-      console.log('key', event.key);
       this.events.emit(this.StartGameEvent);
     });
   }
@@ -90,6 +85,6 @@ export class MenuScene extends Phaser.Scene {
   }
 
   startGameScene() {
-    this.scene.start('GameScene1');
+    this.scene.start('GameScene');
   }
 }

@@ -1,11 +1,8 @@
 {
-  "name": "phaser-collab",
+  "name": "snoopy",
   "version": "0.0.1",
   "description": "",
   "main": "src/index.ts",
-  "repository": {
-    "url": "https://github.com/katis/phaser-collab.git"
-  },
   "scripts": {
     "dev": "snowpack dev",
     "refresh": "node ./scripts/refresh-server.js",
@@ -16,8 +13,6 @@
     "phase",
     "game"
   ],
-  "author": "Joni Katajamäki",
-  "license": "MIT",
   "devDependencies": {
     "phaser": "^3.55.2",
     "snowpack": "^2.18.5",
