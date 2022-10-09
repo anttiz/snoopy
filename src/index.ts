@@ -15,7 +15,7 @@ export function startGame() {
       default: "arcade",
       arcade: {
         gravity: { y: 700 },
-        debug: true,
+        debug: false,
       },
     },
     parent: "game",

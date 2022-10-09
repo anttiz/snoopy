@@ -17,6 +17,7 @@ export class BaseScene extends Phaser.Scene {
   obstacles!: Phaser.Types.Physics.Arcade.ImageWithStaticBody[];
   movingPlatform!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   dangerous!: Phaser.Physics.Arcade.Group;
+  movingObstacles!: Phaser.Physics.Arcade.Group;
   isJumping = false;
   sceneIndex!: number;
   roomIndex: number = 0;
@@ -52,6 +53,9 @@ export class BaseScene extends Phaser.Scene {
       frameHeight: 32
     });
     this.load.image('vertical_obstacle', 'assets/images/vertical_obstacle.png');
+    this.load.image('edge', 'assets/images/edge.png');
+    this.load.image('water', 'assets/images/water.png');
+    this.load.image('ferry', 'assets/images/ferry.png');
 
     this.load.audio('gameover', ['assets/music/fallingdown.mp3']);
   }
@@ -91,7 +95,11 @@ export class BaseScene extends Phaser.Scene {
   }
 
   createDangerous() {
-    const roomIndex = this.roomIndex; // roomIndex = 3;
+    let roomIndex = this.roomIndex;
+
+    roomIndex = 4;
+    this.roomIndex = roomIndex;
+
     if (roomIndex === 0) {
       this.dangerous = this.physics.add.group({
         key: 'rock',
@@ -146,6 +154,35 @@ export class BaseScene extends Phaser.Scene {
         child.body.gameObject.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
         child.body.gameObject.setVelocityX(-100 - 10 * roomIndex);
       });
+    } else if (roomIndex === 4 || roomIndex === 5) {
+      const offset = 320;
+      this.obstacles = new Array(2)
+        .fill(0)
+        .map((item, index) =>
+          this.physics.add.staticImage(300 + index * offset, END_Y + 15, 'edge')
+        );
+      const ferryX = [370, 530];
+      this.movingObstacles = this.physics.add.group({
+        key: 'ferry',
+        repeat: 0,
+        setXY: { x: 430, y: END_Y + 12, stepX: 160 },
+        immovable: true,
+        allowGravity: false,
+        "setScale.x": 1.5,
+        "setScale.y": 1
+      });
+      if (roomIndex === 5) {
+        this.movingObstacles.children.iterate((child) => {
+          child.body.gameObject.setVelocityX(-50);
+        });
+      }
+      this.dangerous = this.physics.add.group({
+        key: 'water',
+        repeat: 0,
+        setXY: { x: 460, y: END_Y + 30, stepX: 0 },
+        immovable: true,
+        allowGravity: false
+      });
     }
   }
 
@@ -174,6 +211,22 @@ export class BaseScene extends Phaser.Scene {
       this.physics.add.overlap(this.player, this.dangerous, (player, rock) =>
         this.hitTheRock()
       );
+    }
+    if (this.movingObstacles) {
+      this.physics.add.collider(this.player, this.movingObstacles);
+    }
+  }
+
+  updateMovingObstacles() {
+    if (this.roomIndex === 5) {
+      this.movingObstacles.children.iterate((child) => {
+        if (child.body.position.x < 310) {
+          child.body.gameObject.setVelocityX(50);
+        }
+        if (child.body.position.x > 490) {
+          child.body.gameObject.setVelocityX(-50);
+        }
+      });
     }
   }
 
@@ -205,6 +258,9 @@ export class BaseScene extends Phaser.Scene {
         }
       });
     }
+
+    this.updateMovingObstacles();
+
     if (player.x >= END_X) {
       this.nextScene();
     }
