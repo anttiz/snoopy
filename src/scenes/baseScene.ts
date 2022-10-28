@@ -14,11 +14,13 @@ export class BaseScene extends Phaser.Scene {
   spaceButton!: Phaser.Input.Keyboard.Key;
   player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   platforms!: Phaser.Physics.Arcade.StaticGroup;
-  obstacles!: Phaser.Types.Physics.Arcade.ImageWithStaticBody[];
+  obstacles!: Phaser.Physics.Arcade.StaticGroup;
   movingPlatform!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   dangerous!: Phaser.Physics.Arcade.Group;
   movingObstacles!: Phaser.Physics.Arcade.Group;
+  movingObstacles2!: Phaser.Physics.Arcade.Group;
   isJumping = false;
+  isDead = false;
   sceneIndex!: number;
   roomIndex: number = 0;
   playerGroundCollider!: Phaser.Physics.Arcade.Collider;
@@ -56,6 +58,9 @@ export class BaseScene extends Phaser.Scene {
     this.load.image('edge', 'assets/images/edge.png');
     this.load.image('water', 'assets/images/water.png');
     this.load.image('ferry', 'assets/images/ferry.png');
+    this.load.image('gray_level', 'assets/images/gray_level.png');
+    this.load.image('gray_block_200', 'assets/images/gray_level_200x200.png');
+    this.load.image('gray_block_100_200', 'assets/images/gray_level_100x200.png');
 
     this.load.audio('gameover', ['assets/music/fallingdown.mp3']);
   }
@@ -96,10 +101,10 @@ export class BaseScene extends Phaser.Scene {
 
   createDangerous() {
     let roomIndex = this.roomIndex;
-
+    /*
     roomIndex = 4;
     this.roomIndex = roomIndex;
-
+    */
     if (roomIndex === 0) {
       this.dangerous = this.physics.add.group({
         key: 'rock',
@@ -117,33 +122,24 @@ export class BaseScene extends Phaser.Scene {
         repeat: 2,
         setXY: { x: END_X / 2, y: END_Y, stepX: 300 }
       });
-
       this.dangerous.children.iterate((child) => {
         child.body.gameObject.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
         child.body.gameObject.setVelocityX(-100 - 10 * roomIndex);
       });
     } else if (roomIndex === 2) {
       const offset = 200;
-      this.obstacles = new Array(3)
-        .fill(0)
-        .map((item, index) =>
-          this.physics.add.staticImage(
-            300 + index * offset,
-            220,
-            'vertical_obstacle'
-          )
-        );
+      this.obstacles = this.physics.add.staticGroup({
+        key: 'vertical_obstacle',
+        repeat: 2,
+        setXY: { x: 300, y: 220, stepX: offset }
+      });
     } else if (roomIndex === 3) {
       const offset = 200;
-      this.obstacles = new Array(3)
-        .fill(0)
-        .map((item, index) =>
-          this.physics.add.staticImage(
-            300 + index * offset,
-            220,
-            'vertical_obstacle'
-          )
-        );
+      this.obstacles = this.physics.add.staticGroup({
+        key: 'vertical_obstacle',
+        repeat: 2,
+        setXY: { x: 300, y: 220, stepX: offset }
+      });
       this.dangerous = this.physics.add.group({
         key: 'rock',
         repeat: 0,
@@ -156,11 +152,11 @@ export class BaseScene extends Phaser.Scene {
       });
     } else if (roomIndex === 4 || roomIndex === 5) {
       const offset = 320;
-      this.obstacles = new Array(2)
-        .fill(0)
-        .map((item, index) =>
-          this.physics.add.staticImage(300 + index * offset, END_Y + 15, 'edge')
-        );
+      this.obstacles = this.physics.add.staticGroup({
+        key: 'edge',
+        repeat: 1,
+        setXY: { x: 300, y: END_Y + 15, stepX: offset }
+      });
       const ferryX = [370, 530];
       this.movingObstacles = this.physics.add.group({
         key: 'ferry',
@@ -168,8 +164,8 @@ export class BaseScene extends Phaser.Scene {
         setXY: { x: 430, y: END_Y + 12, stepX: 160 },
         immovable: true,
         allowGravity: false,
-        "setScale.x": 1.5,
-        "setScale.y": 1
+        'setScale.x': 1.5,
+        'setScale.y': 1
       });
       if (roomIndex === 5) {
         this.movingObstacles.children.iterate((child) => {
@@ -182,6 +178,47 @@ export class BaseScene extends Phaser.Scene {
         setXY: { x: 460, y: END_Y + 30, stepX: 0 },
         immovable: true,
         allowGravity: false
+      });
+    } else if (roomIndex === 6) {
+      this.obstacles = this.physics.add.staticGroup({
+        key: 'gray_level',
+        repeat: 0,
+        setXY: { x: 550, y: 455, stepX: 100 },
+      });
+
+      this.movingObstacles = this.physics.add.group({
+        key: 'ferry',
+        repeat: 0,
+        setXY: { x: 240, y: END_Y + 45, stepX: 160 },
+        immovable: true,
+        allowGravity: false,
+        'setScale.x': 1.5,
+        'setScale.y': 1
+      });
+    } else if (roomIndex === 7) {
+      this.obstacles = this.physics.add.staticGroup({
+        key: 'gray_block_100_200',
+        repeat: 2,
+        setXY: { x: 200, y: 455, stepX: 300 },
+      });
+
+      this.movingObstacles = this.physics.add.group({
+        key: 'ferry',
+        repeat: 2,
+        setXY: { x: 130, y: END_Y + 45, stepX: 300 },
+        immovable: true,
+        allowGravity: false,
+        'setScale.x': 0.5,
+        'setScale.y': 1
+      });
+      this.movingObstacles2 = this.physics.add.group({
+        key: 'ferry',
+        repeat: 2,
+        setXY: { x: 270, y: 365, stepX: 300 },
+        immovable: true,
+        allowGravity: false,
+        'setScale.x': 0.5,
+        'setScale.y': 1
       });
     }
   }
@@ -209,11 +246,14 @@ export class BaseScene extends Phaser.Scene {
     if (this.dangerous && this.dangerous.children) {
       this.physics.add.collider(this.dangerous, this.platforms);
       this.physics.add.overlap(this.player, this.dangerous, (player, rock) =>
-        this.hitTheRock()
+        this.hitDangerous()
       );
     }
     if (this.movingObstacles) {
       this.physics.add.collider(this.player, this.movingObstacles);
+    }
+    if (this.movingObstacles2) {
+      this.physics.add.collider(this.player, this.movingObstacles2);
     }
   }
 
@@ -227,11 +267,81 @@ export class BaseScene extends Phaser.Scene {
           child.body.gameObject.setVelocityX(-50);
         }
       });
+    } else if (this.roomIndex === 6) {
+      // move lift
+      this.movingObstacles.children.iterate((child) => {
+        // lift will start to move up
+        if (this.player.x > 250 &&
+          child.body.velocity.y === 0) {
+          child.body.gameObject.setVelocityY(-50);
+        }
+        // lift will start moving down
+        if (this.player.x < 260 &&
+          child.body.velocity.y === 0 &&
+          child.body.position.y > 350 &&
+          child.body.position.y < 360) {
+          child.body.gameObject.setVelocityY(50);
+        }
+        // lift will stop when going up
+        if (child.body.position.y < 355 &&
+          child.body.velocity.y === -50) {
+          child.body.gameObject.setVelocityY(0);
+        }
+        // lift will stop when going down
+        if (child.body.position.y > 535 &&
+          child.body.velocity.y === 50) {
+          child.body.gameObject.setVelocityY(0);
+        }
+      });
+    } else if (this.roomIndex === 7) {
+      // move lift
+      const lifts:Phaser.GameObjects.GameObject[] = [];
+      this.movingObstacles.children.iterate((child) => lifts.push(child));
+      this.movingObstacles2.children.iterate((child) => lifts.push(child));
+      this.movingObstacles.children.iterate((child) => {
+        // lift will start to move up
+        const startX = child.body.position.x;
+        const endX = child.body.position.x + child.body.gameObject.width;
+        if (this.player.x > startX &&
+          this.player.x < endX &&
+          child.body.velocity.y === 0 &&
+          child.body.position.y > 500) {
+          child.body.gameObject.setVelocityY(-50);
+        }
+        // lift will stop when going up
+        if (child.body.position.y < 355 &&
+          child.body.velocity.y === -50) {
+          child.body.gameObject.setVelocityY(0);
+          child.body.velocity.y = 0;
+        }
+      });
+      this.movingObstacles2.children.iterate((child) => {
+        // lift will start to move up
+        const startX = child.body.position.x;
+        const endX = child.body.position.x + child.body.gameObject.width;
+        if (this.player.x > startX &&
+          this.player.x < endX &&
+          child.body.velocity.y === 0 &&
+          child.body.position.y > 350 &&
+          child.body.position.y < 360) {
+          child.body.gameObject.setVelocityY(50);
+        }
+        // lift will stop when going down
+        if (child.body.position.y > 535 &&
+          child.body.velocity.y === 50) {
+          child.body.gameObject.setVelocityY(0);
+        }
+      });
     }
   }
 
   update() {
     const { cursors, player, movingPlatform, spaceButton } = this;
+    if (player.y >= END_Y + 100) {
+      // fallen too much
+      this.restartScene();
+    }
+    if (this.isDead) return;
     if (!this.isJumping) {
       if (cursors.left.isDown) {
         player.setVelocityX(-160);
@@ -264,10 +374,6 @@ export class BaseScene extends Phaser.Scene {
     if (player.x >= END_X) {
       this.nextScene();
     }
-    if (player.y >= END_Y + 100) {
-      // fallen too much
-      this.restartScene();
-    }
   }
 
   nextScene() {
@@ -277,15 +383,17 @@ export class BaseScene extends Phaser.Scene {
   }
 
   restartScene() {
+    this.isDead = false;
     this.scene.restart();
   }
 
-  hitTheRock() {
+  hitDangerous() {
     this.player.setVelocityX(0);
     this.player.setVelocityY(50);
     this.player.body.allowGravity = false;
     this.physics.world.removeCollider(this.playerGroundCollider);
     this.player.setCollideWorldBounds(false);
+    this.isDead = true;
     // this.game.sound.resumeAll();
     // this.music.play();
   }
