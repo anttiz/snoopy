@@ -1,6 +1,6 @@
-# Phaser collaborative template
+# "Snoopy" platformer game
+![image](https://user-images.githubusercontent.com/67463046/198585985-e7cd277c-f286-433e-8144-66b2f09d6b25.png)
 
-Phaser template for use with VSCode remote development by multiple people simultaneously.
 
 ## Development
 
