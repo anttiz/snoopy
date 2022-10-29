@@ -29,7 +29,7 @@ export class BaseScene extends Phaser.Scene {
   constructor({ sceneIndex }: Props) {
     super({ active: false, visible: false });
     this.sceneIndex = sceneIndex;
-    this.roomIndex = 0;
+    this.roomIndex = 7;
     const key = `GameScene${sceneIndex}`;
     Phaser.Scene.call(this, { key });
   }
@@ -199,13 +199,13 @@ export class BaseScene extends Phaser.Scene {
       this.obstacles = this.physics.add.staticGroup({
         key: 'gray_block_100_200',
         repeat: 2,
-        setXY: { x: 200, y: 455, stepX: 300 },
+        setXY: { x: 220, y: 455, stepX: 300 },
       });
 
       this.movingObstacles = this.physics.add.group({
         key: 'ferry',
         repeat: 2,
-        setXY: { x: 130, y: END_Y + 45, stepX: 300 },
+        setXY: { x: 150, y: END_Y + 45, stepX: 300 },
         immovable: true,
         allowGravity: false,
         'setScale.x': 0.5,
@@ -214,10 +214,10 @@ export class BaseScene extends Phaser.Scene {
       this.movingObstacles2 = this.physics.add.group({
         key: 'ferry',
         repeat: 2,
-        setXY: { x: 270, y: 365, stepX: 300 },
+        setXY: { x: 310, y: 365, stepX: 300 },
         immovable: true,
         allowGravity: false,
-        'setScale.x': 0.5,
+        'setScale.x': 1,
         'setScale.y': 1
       });
     }
