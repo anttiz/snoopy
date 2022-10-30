@@ -16,7 +16,8 @@ export class BaseScene extends Phaser.Scene {
   platforms!: Phaser.Physics.Arcade.StaticGroup;
   obstacles!: Phaser.Physics.Arcade.StaticGroup;
   movingPlatform!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
-  dangerous!: Phaser.Physics.Arcade.Group;
+  dangerous?: Phaser.Physics.Arcade.Group;
+  dangerousCopy?: Phaser.Physics.Arcade.Group;
   movingObstacles!: Phaser.Physics.Arcade.Group;
   movingObstacles2!: Phaser.Physics.Arcade.Group;
   isJumping = false;
@@ -25,11 +26,13 @@ export class BaseScene extends Phaser.Scene {
   roomIndex: number = 0;
   playerGroundCollider!: Phaser.Physics.Arcade.Collider;
   music!: Phaser.Sound.BaseSound;
+  timedEvent!: Phaser.Time.TimerEvent;
+  dangerousVisible = false;
 
   constructor({ sceneIndex }: Props) {
     super({ active: false, visible: false });
     this.sceneIndex = sceneIndex;
-    this.roomIndex = 7;
+    this.roomIndex = 0;
     const key = `GameScene${sceneIndex}`;
     Phaser.Scene.call(this, { key });
   }
@@ -57,10 +60,14 @@ export class BaseScene extends Phaser.Scene {
     this.load.image('vertical_obstacle', 'assets/images/vertical_obstacle.png');
     this.load.image('edge', 'assets/images/edge.png');
     this.load.image('water', 'assets/images/water.png');
+    this.load.image('laser', 'assets/images/laser.png');
     this.load.image('ferry', 'assets/images/ferry.png');
     this.load.image('gray_level', 'assets/images/gray_level.png');
     this.load.image('gray_block_200', 'assets/images/gray_level_200x200.png');
-    this.load.image('gray_block_100_200', 'assets/images/gray_level_100x200.png');
+    this.load.image(
+      'gray_block_100_200',
+      'assets/images/gray_level_100x200.png'
+    );
 
     this.load.audio('gameover', ['assets/music/fallingdown.mp3']);
   }
@@ -183,7 +190,7 @@ export class BaseScene extends Phaser.Scene {
       this.obstacles = this.physics.add.staticGroup({
         key: 'gray_level',
         repeat: 0,
-        setXY: { x: 550, y: 455, stepX: 100 },
+        setXY: { x: 550, y: 455, stepX: 100 }
       });
 
       this.movingObstacles = this.physics.add.group({
@@ -199,7 +206,7 @@ export class BaseScene extends Phaser.Scene {
       this.obstacles = this.physics.add.staticGroup({
         key: 'gray_block_100_200',
         repeat: 2,
-        setXY: { x: 220, y: 455, stepX: 300 },
+        setXY: { x: 220, y: 455, stepX: 300 }
       });
 
       this.movingObstacles = this.physics.add.group({
@@ -220,6 +227,28 @@ export class BaseScene extends Phaser.Scene {
         'setScale.x': 1,
         'setScale.y': 1
       });
+    } else if (roomIndex === 8) {
+      const offset = 320;
+      this.obstacles = this.physics.add.staticGroup({
+        key: 'edge',
+        repeat: 1,
+        setXY: { x: 300, y: END_Y + 20, stepX: offset },
+        'setScale.y': 0.7
+      });
+      this.timedEvent = this.time.addEvent({
+        delay: 1000,
+        callback: this.onTimedEvent,
+        callbackScope: this
+      });
+      this.dangerous = this.physics.add.group({
+        key: 'laser',
+        repeat: 0,
+        setXY: { x: 460, y: END_Y + 20, stepX: 0 },
+        immovable: true,
+        allowGravity: false,
+        'setScale.y': 0.2
+      });
+      this.dangerousVisible = true;
     }
   }
 
@@ -243,12 +272,7 @@ export class BaseScene extends Phaser.Scene {
     if (this.obstacles) {
       this.physics.add.collider(this.player, this.obstacles);
     }
-    if (this.dangerous && this.dangerous.children) {
-      this.physics.add.collider(this.dangerous, this.platforms);
-      this.physics.add.overlap(this.player, this.dangerous, (player, rock) =>
-        this.hitDangerous()
-      );
-    }
+    this.addDangerousCollider();
     if (this.movingObstacles) {
       this.physics.add.collider(this.player, this.movingObstacles);
     }
@@ -271,46 +295,46 @@ export class BaseScene extends Phaser.Scene {
       // move lift
       this.movingObstacles.children.iterate((child) => {
         // lift will start to move up
-        if (this.player.x > 250 &&
-          child.body.velocity.y === 0) {
+        if (this.player.x > 250 && child.body.velocity.y === 0) {
           child.body.gameObject.setVelocityY(-50);
         }
         // lift will start moving down
-        if (this.player.x < 260 &&
+        if (
+          this.player.x < 260 &&
           child.body.velocity.y === 0 &&
           child.body.position.y > 350 &&
-          child.body.position.y < 360) {
+          child.body.position.y < 360
+        ) {
           child.body.gameObject.setVelocityY(50);
         }
         // lift will stop when going up
-        if (child.body.position.y < 355 &&
-          child.body.velocity.y === -50) {
+        if (child.body.position.y < 355 && child.body.velocity.y === -50) {
           child.body.gameObject.setVelocityY(0);
         }
         // lift will stop when going down
-        if (child.body.position.y > 535 &&
-          child.body.velocity.y === 50) {
+        if (child.body.position.y > 535 && child.body.velocity.y === 50) {
           child.body.gameObject.setVelocityY(0);
         }
       });
     } else if (this.roomIndex === 7) {
       // move lift
-      const lifts:Phaser.GameObjects.GameObject[] = [];
+      const lifts: Phaser.GameObjects.GameObject[] = [];
       this.movingObstacles.children.iterate((child) => lifts.push(child));
       this.movingObstacles2.children.iterate((child) => lifts.push(child));
       this.movingObstacles.children.iterate((child) => {
         // lift will start to move up
         const startX = child.body.position.x;
         const endX = child.body.position.x + child.body.gameObject.width;
-        if (this.player.x > startX &&
+        if (
+          this.player.x > startX &&
           this.player.x < endX &&
           child.body.velocity.y === 0 &&
-          child.body.position.y > 500) {
+          child.body.position.y > 500
+        ) {
           child.body.gameObject.setVelocityY(-50);
         }
         // lift will stop when going up
-        if (child.body.position.y < 355 &&
-          child.body.velocity.y === -50) {
+        if (child.body.position.y < 355 && child.body.velocity.y === -50) {
           child.body.gameObject.setVelocityY(0);
           child.body.velocity.y = 0;
         }
@@ -319,16 +343,17 @@ export class BaseScene extends Phaser.Scene {
         // lift will start to move up
         const startX = child.body.position.x;
         const endX = child.body.position.x + child.body.gameObject.width;
-        if (this.player.x > startX &&
+        if (
+          this.player.x > startX &&
           this.player.x < endX &&
           child.body.velocity.y === 0 &&
           child.body.position.y > 350 &&
-          child.body.position.y < 360) {
+          child.body.position.y < 360
+        ) {
           child.body.gameObject.setVelocityY(50);
         }
         // lift will stop when going down
-        if (child.body.position.y > 535 &&
-          child.body.velocity.y === 50) {
+        if (child.body.position.y > 535 && child.body.velocity.y === 50) {
           child.body.gameObject.setVelocityY(0);
         }
       });
@@ -373,6 +398,41 @@ export class BaseScene extends Phaser.Scene {
 
     if (player.x >= END_X) {
       this.nextScene();
+    }
+  }
+
+  addDangerousCollider() {
+    if (this.dangerous && this.dangerous.children) {
+      this.physics.add.collider(this.dangerous, this.platforms);
+      this.physics.add.overlap(
+        this.player,
+        this.dangerous,
+        (player, rock) => this.hitDangerous()
+      );
+    }
+  }
+
+  onTimedEvent() {
+    if (this.roomIndex === 8) {
+      if (this.dangerousVisible) {
+        this.dangerous?.clear(true);
+      } else {
+        this.dangerous = this.physics.add.group({
+          key: 'laser',
+          repeat: 0,
+          setXY: { x: 460, y: END_Y + 20, stepX: 0 },
+          immovable: true,
+          allowGravity: false,
+          'setScale.y': 0.2
+        });
+        this.addDangerousCollider();
+      }
+      this.timedEvent = this.time.addEvent({
+        delay: this.dangerousVisible ? 1000 : 100,
+        callback: this.onTimedEvent,
+        callbackScope: this
+      });
+      this.dangerousVisible = !this.dangerousVisible;
     }
   }
 
