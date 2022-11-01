@@ -14,12 +14,12 @@ export class BaseScene extends Phaser.Scene {
   spaceButton!: Phaser.Input.Keyboard.Key;
   player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   platforms!: Phaser.Physics.Arcade.StaticGroup;
-  obstacles!: Phaser.Physics.Arcade.StaticGroup;
+  obstacles?: Phaser.Physics.Arcade.StaticGroup;
   movingPlatform!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   dangerous?: Phaser.Physics.Arcade.Group;
   dangerousCopy?: Phaser.Physics.Arcade.Group;
-  movingObstacles!: Phaser.Physics.Arcade.Group;
-  movingObstacles2!: Phaser.Physics.Arcade.Group;
+  movingObstacles?: Phaser.Physics.Arcade.Group;
+  movingObstacles2?: Phaser.Physics.Arcade.Group;
   isJumping = false;
   isDead = false;
   sceneIndex!: number;
@@ -34,7 +34,7 @@ export class BaseScene extends Phaser.Scene {
   constructor({ sceneIndex }: Props) {
     super({ active: false, visible: false });
     this.sceneIndex = sceneIndex;
-    this.roomIndex = 0;
+    this.roomIndex = 7;
     const key = `GameScene${sceneIndex}`;
     Phaser.Scene.call(this, { key });
   }
@@ -71,7 +71,8 @@ export class BaseScene extends Phaser.Scene {
       'assets/images/gray_level_100x200.png'
     );
 
-    this.load.audio('gameover', ['assets/music/fallingdown.mp3']);
+    // this.load.audio('gameover', ['assets/music/fallingdown.mp3']);
+    this.load.audio('gameover', ['assets/music/falling-bomb-41038.mp3']);
   }
 
   createAnims() {
@@ -104,16 +105,17 @@ export class BaseScene extends Phaser.Scene {
   createMusic() {
     this.music = this.game.sound.add('gameover', {
       loop: false,
-      volume: 5
+      volume: 0.1
     });
   }
 
   createDangerous() {
     let roomIndex = this.roomIndex;
-    /*
-    roomIndex = 4;
-    this.roomIndex = roomIndex;
-    */
+    this.dangerous = undefined;
+    this.obstacles = undefined;
+    this.movingObstacles = undefined;
+    this.movingObstacles2 = undefined;
+
     if (roomIndex === 0) {
       this.dangerous = this.physics.add.group({
         key: 'rock',
@@ -285,7 +287,7 @@ export class BaseScene extends Phaser.Scene {
 
   updateMovingObstacles() {
     if (this.roomIndex === 5) {
-      this.movingObstacles.children.iterate((child) => {
+      this.movingObstacles?.children.iterate((child) => {
         if (child.body.position.x < 310) {
           child.body.gameObject.setVelocityX(50);
         }
@@ -295,7 +297,7 @@ export class BaseScene extends Phaser.Scene {
       });
     } else if (this.roomIndex === 6) {
       // move lift
-      this.movingObstacles.children.iterate((child) => {
+      this.movingObstacles?.children.iterate((child) => {
         // lift will start to move up
         if (this.player.x > 250 && child.body.velocity.y === 0) {
           child.body.gameObject.setVelocityY(-50);
@@ -320,10 +322,7 @@ export class BaseScene extends Phaser.Scene {
       });
     } else if (this.roomIndex === 7) {
       // move lift
-      const lifts: Phaser.GameObjects.GameObject[] = [];
-      this.movingObstacles.children.iterate((child) => lifts.push(child));
-      this.movingObstacles2.children.iterate((child) => lifts.push(child));
-      this.movingObstacles.children.iterate((child) => {
+      this.movingObstacles?.children.iterate((child) => {
         // lift will start to move up
         const startX = child.body.position.x;
         const endX = child.body.position.x + child.body.gameObject.width;
@@ -341,7 +340,7 @@ export class BaseScene extends Phaser.Scene {
           child.body.velocity.y = 0;
         }
       });
-      this.movingObstacles2.children.iterate((child) => {
+      this.movingObstacles2?.children.iterate((child) => {
         // lift will start to move up
         const startX = child.body.position.x;
         const endX = child.body.position.x + child.body.gameObject.width;
@@ -363,7 +362,7 @@ export class BaseScene extends Phaser.Scene {
   }
 
   update() {
-    const { cursors, player, movingPlatform, spaceButton } = this;
+    const { cursors, player, spaceButton } = this;
     if (player.y >= END_Y + 100) {
       // fallen too much
       this.restartScene();
@@ -457,17 +456,17 @@ export class BaseScene extends Phaser.Scene {
 
   restartScene() {
     this.isDead = false;
+    this.music.stop();
     this.scene.restart();
   }
 
   hitDangerous() {
+    this.music.play();
     this.player.setVelocityX(0);
     this.player.setVelocityY(50);
     this.player.body.allowGravity = false;
     this.physics.world.removeCollider(this.playerGroundCollider);
     this.player.setCollideWorldBounds(false);
     this.isDead = true;
-    // this.game.sound.resumeAll();
-    // this.music.play();
   }
 }

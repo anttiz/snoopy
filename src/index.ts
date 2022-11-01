@@ -1,5 +1,4 @@
 import { GameScene } from "./scenes/gameScene";
-import { GameSceneOrig } from "./scenes/gameSceneOrig";
 import { MenuScene } from "./scenes/menuScene";
 
 export function startGame() {
@@ -20,7 +19,10 @@ export function startGame() {
     },
     parent: "game",
     backgroundColor: "#0f0f0f",
-    scene: [/* MenuScene, */ GameScene, GameSceneOrig],
+    scene: [/* MenuScene, */ GameScene],
+    audio: {
+      disableWebAudio: true
+    }
   };
 
   return new Phaser.Game(config);
