@@ -34,7 +34,7 @@ export class BaseScene extends Phaser.Scene {
   constructor({ sceneIndex }: Props) {
     super({ active: false, visible: false });
     this.sceneIndex = sceneIndex;
-    this.roomIndex = 7;
+    this.roomIndex = 0;
     const key = `GameScene${sceneIndex}`;
     Phaser.Scene.call(this, { key });
   }
