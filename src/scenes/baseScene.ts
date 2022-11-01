@@ -28,6 +28,8 @@ export class BaseScene extends Phaser.Scene {
   music!: Phaser.Sound.BaseSound;
   timedEvent!: Phaser.Time.TimerEvent;
   dangerousVisible = false;
+  dangerousCollider?: Phaser.Physics.Arcade.Collider = undefined;
+  platformCollider?: Phaser.Physics.Arcade.Collider = undefined;
 
   constructor({ sceneIndex }: Props) {
     super({ active: false, visible: false });
@@ -401,20 +403,33 @@ export class BaseScene extends Phaser.Scene {
     }
   }
 
+  removeDangerousCollider() {
+    if (this.platformCollider) {
+      this.physics.world.removeCollider(this.platformCollider);
+      this.platformCollider = undefined;
+    }
+    if (this.dangerousCollider) {
+      this.physics.world.removeCollider(this.dangerousCollider);
+      this.dangerousCollider = undefined;
+    }
+  }
+
   addDangerousCollider() {
-    if (this.dangerous && this.dangerous.children) {
-      this.physics.add.collider(this.dangerous, this.platforms);
-      this.physics.add.overlap(
-        this.player,
+    if (this.dangerous) {
+      this.platformCollider = this.physics.add.collider(
         this.dangerous,
-        (player, rock) => this.hitDangerous()
+        this.platforms
       );
+      this.dangerousCollider = this.physics.add.overlap(this.player, this.dangerous, (player, rock) => {
+        this.hitDangerous()
+      });
     }
   }
 
   onTimedEvent() {
     if (this.roomIndex === 8) {
       if (this.dangerousVisible) {
+        this.removeDangerousCollider();
         this.dangerous?.clear(true);
       } else {
         this.dangerous = this.physics.add.group({
@@ -437,8 +452,6 @@ export class BaseScene extends Phaser.Scene {
   }
 
   nextScene() {
-    // this.scene.start(`GameScene${this.sceneIndex}`, { roomIndex: this.roomIndex + 1 });
-    console.log(this.roomIndex);
     this.scene.restart({ roomIndex: this.roomIndex + 1 });
   }
 
